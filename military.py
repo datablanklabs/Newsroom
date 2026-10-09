@@ -1,0 +1,151 @@
+"""
+Military pack: armed forces and commands, weapons systems, named operations and the vocabulary
+of war logs and military reporting (SIGACTs, casualties, IEDs, air strikes, detainees ...).
+Suits the Afghan and Iraq War Logs, Pentagon releases, the Ukraine/Gaza war leaks and
+military-intelligence material.
+"""
+
+DESCRIPTION = "Military: forces, commands, weapons systems, named operations, war-log vocabulary"
+REQUIRES = ["core", "government"]
+
+AGENCY = [
+    ("U.S. Army", ["U.S. Army", "US Army", "United States Army"], "U.S. Army."),
+    ("U.S. Navy", ["U.S. Navy", "US Navy", "United States Navy"], "U.S. Navy."),
+    ("U.S. Air Force", ["U.S. Air Force", "US Air Force", "USAF", "United States Air Force"], "U.S. Air Force."),
+    ("U.S. Marine Corps", ["U.S. Marine Corps", "USMC", "Marine Corps", "U.S. Marines"], "U.S. Marine Corps."),
+    ("U.S. Coast Guard", ["U.S. Coast Guard", "USCG", "Coast Guard"], "U.S. Coast Guard."),
+    ("U.S. Space Force", ["Space Force", "USSF"], "U.S. Space Force."),
+    ("National Guard", ["National Guard", "Army National Guard", "Air National Guard"], "U.S. National Guard."),
+    ("EUCOM", ["USEUCOM", "European Command", "EUCOM"], "U.S. European Command."),
+    ("INDOPACOM", ["USINDOPACOM", "PACOM", "USPACOM", "Pacific Command", "Indo-Pacific Command"], "U.S. Indo-Pacific (formerly Pacific) Command."),
+    ("NORTHCOM", ["USNORTHCOM", "Northern Command"], "U.S. Northern Command."),
+    ("SOUTHCOM", ["USSOUTHCOM", "Southern Command"], "U.S. Southern Command."),
+    ("STRATCOM", ["USSTRATCOM", "Strategic Command"], "U.S. Strategic Command (nuclear forces)."),
+    ("TRANSCOM", ["USTRANSCOM", "Transportation Command"], "U.S. Transportation Command."),
+    ("NORAD", ["North American Aerospace Defense Command"], "North American Aerospace Defense Command."),
+    ("DARPA", ["Defense Advanced Research Projects Agency"], "U.S. defense research agency."),
+    ("Defense Threat Reduction Agency", ["Defense Threat Reduction Agency", "DTRA"], "U.S. agency countering weapons of mass destruction."),
+    ("MNF-I", ["Multi-National Force – Iraq", "Multi-National Force-Iraq", "Multi-National Force Iraq", "MNF-I", "MNFI", "MNC-I"], "U.S.-led coalition command in Iraq, 2004–2009."),
+    ("ISAF", ["International Security Assistance Force", "ISAF"], "NATO-led force in Afghanistan, 2001–2014."),
+    ("Resolute Support", ["Resolute Support Mission"], "NATO mission in Afghanistan, 2015–2021."),
+    ("Iraqi Security Forces", ["Iraqi Security Forces", "ISF", "Iraqi Army", "Iraqi Police"], "Iraqi army and police."),
+    ("Afghan National Security Forces", ["Afghan National Army", "ANA", "Afghan National Police", "ANP", "ANSF", "Afghan National Security Forces"], "Afghan army and police."),
+    ("Israel Defense Forces", ["Israel Defense Forces", "IDF"], "Israel's armed forces."),
+    ("Russian Armed Forces", ["Russian Armed Forces", "Russian military", "Russian army"], "Russia's armed forces."),
+    ("Armed Forces of Ukraine", ["Armed Forces of Ukraine", "Ukrainian Armed Forces", "Ukrainian army", "ZSU"], "Ukraine's armed forces."),
+    ("Syrian Arab Army", ["Syrian Arab Army", "Syrian army"], "Syria's army."),
+    ("Kurdish Peshmerga", ["Peshmerga"], "Armed forces of Iraqi Kurdistan."),
+    ("Syrian Democratic Forces", ["Syrian Democratic Forces", "YPG"], "Kurdish-led militia alliance in northern Syria."),
+]
+
+TECHNOLOGY = [
+    ("MQ-1 Predator", ["MQ-1", "MQ-1 Predator", "Predator drone"], "U.S. armed drone."),
+    ("MQ-9 Reaper", ["MQ-9", "MQ-9 Reaper", "Reaper drone"], "U.S. armed drone."),
+    ("RQ-4 Global Hawk", ["RQ-4", "Global Hawk"], "U.S. surveillance drone."),
+    ("Drones / UAVs", ["drone", "drones", "UAV", "UAVs", "UAS", "unmanned aerial vehicle", "unmanned aircraft"], "Unmanned aircraft in general."),
+    ("Bayraktar TB2", ["Bayraktar", "TB2"], "Turkish armed drone."),
+    ("Shahed drones", ["Shahed", "Shahed-136", "Geran-2"], "Iranian-designed one-way attack drones."),
+    ("F-35", ["F-35", "F-35A", "F-35B", "F-35C", "Joint Strike Fighter"], "U.S. stealth fighter."),
+    ("F-16", ["F-16", "F-16s"], "Fighter jet."),
+    ("F-15", ["F-15", "F-15E"], "Fighter jet."),
+    ("F-22", ["F-22", "Raptor"], "U.S. stealth fighter."),
+    ("A-10", ["A-10", "Warthog"], "U.S. close-air-support aircraft."),
+    ("AC-130", ["AC-130", "AC-130 gunship"], "U.S. gunship."),
+    ("B-52", ["B-52"], "U.S. strategic bomber."),
+    ("B-2", ["B-2 Spirit", "B-2 bomber"], "U.S. stealth bomber."),
+    ("AH-64 Apache", ["AH-64", "Apache helicopter", "Apache helicopters", "AH-64D"], "U.S. attack helicopter."),
+    ("UH-60 Black Hawk", ["UH-60", "Black Hawk", "Blackhawk"], "U.S. utility helicopter."),
+    ("CH-47 Chinook", ["CH-47", "Chinook"], "U.S. heavy-lift helicopter."),
+    ("V-22 Osprey", ["V-22", "Osprey", "MV-22"], "U.S. tilt-rotor aircraft."),
+    ("M1 Abrams", ["M1 Abrams", "M1A2", "Abrams tank", "Abrams tanks"], "U.S. main battle tank."),
+    ("Bradley Fighting Vehicle", ["Bradley Fighting Vehicle", "M2 Bradley", "Bradley IFV"], "U.S. infantry fighting vehicle."),
+    ("Stryker", ["Stryker"], "U.S. armored vehicle."),
+    ("MRAP", ["MRAP", "MRAPs", "Mine-Resistant Ambush Protected"], "Mine-resistant armored vehicles."),
+    ("Humvee", ["Humvee", "HMMWV", "Humvees"], "U.S. military light vehicle."),
+    ("Leopard 2", ["Leopard 2", "Leopard tanks"], "German main battle tank."),
+    ("T-72 / T-90", ["T-72", "T-80", "T-90"], "Soviet/Russian main battle tanks."),
+    ("HIMARS", ["HIMARS", "M142"], "U.S. mobile rocket launcher."),
+    ("ATACMS", ["ATACMS"], "U.S. tactical ballistic missile."),
+    ("Javelin", ["Javelin", "FGM-148"], "U.S. anti-tank missile."),
+    ("Stinger", ["Stinger", "FIM-92"], "Shoulder-fired anti-aircraft missile."),
+    ("Patriot missile", ["Patriot missile", "Patriot missiles", "Patriot battery", "PAC-3", "MIM-104"], "U.S. air and missile defense system."),
+    ("THAAD", ["THAAD", "Terminal High Altitude Area Defense"], "U.S. missile defense system."),
+    ("Iron Dome", ["Iron Dome"], "Israeli short-range air defense system."),
+    ("Tomahawk", ["Tomahawk", "Tomahawks", "TLAM"], "U.S. cruise missile."),
+    ("Hellfire", ["Hellfire", "AGM-114"], "U.S. air-to-ground missile."),
+    ("JDAM", ["JDAM", "JDAMs", "Joint Direct Attack Munition"], "U.S. GPS-guided bomb kit."),
+    ("Storm Shadow / SCALP", ["Storm Shadow", "SCALP"], "Anglo-French cruise missile."),
+    ("S-300 / S-400", ["S-300", "S-400", "S-500"], "Russian surface-to-air missile systems."),
+    ("Iskander", ["Iskander"], "Russian short-range ballistic missile."),
+    ("Kalibr", ["Kalibr"], "Russian cruise missile."),
+    ("Kinzhal", ["Kinzhal"], "Russian air-launched ballistic missile."),
+    ("ICBMs", ["ICBM", "ICBMs", "intercontinental ballistic missile", "Minuteman", "Sarmat"], "Intercontinental ballistic missiles."),
+    ("IED", ["IED", "IEDs", "improvised explosive device", "improvised explosive devices", "VBIED", "SVBIED", "roadside bomb", "EFP"], "Improvised explosive devices."),
+    ("Cluster munitions", ["cluster munition", "cluster munitions", "cluster bomb", "cluster bombs", "DPICM"], "Cluster munitions."),
+    ("White phosphorus", ["white phosphorus", "WP rounds"], "Incendiary munition."),
+    ("Rocket-propelled grenades", ["RPG", "RPGs", "rocket-propelled grenade"], "Shoulder-fired rocket-propelled grenades."),
+    ("AK-47", ["AK-47", "AK-47s", "Kalashnikov", "AKM", "AK-74"], "Kalashnikov assault rifles."),
+    ("M4 / M16", ["M4 carbine", "M16", "M4s"], "U.S. service rifles."),
+]
+
+PROGRAM = [
+    ("Operation Enduring Freedom", ["Operation Enduring Freedom", "Enduring Freedom", "OEF"], "U.S. war in Afghanistan, 2001–2014."),
+    ("Operation Iraqi Freedom", ["Operation Iraqi Freedom", "Iraqi Freedom", "OIF"], "U.S.-led war in Iraq, 2003–2010."),
+    ("Operation New Dawn", ["Operation New Dawn"], "U.S. mission in Iraq, 2010–2011."),
+    ("Operation Desert Storm", ["Operation Desert Storm", "Desert Storm", "Desert Shield", "Gulf War"], "U.S.-led war to expel Iraq from Kuwait, 1991."),
+    ("Operation Inherent Resolve", ["Operation Inherent Resolve", "Inherent Resolve", "OIR"], "U.S.-led campaign against ISIS from 2014."),
+    ("Operation Freedom's Sentinel", ["Operation Freedom's Sentinel", "Freedom's Sentinel"], "U.S. mission in Afghanistan, 2015–2021."),
+    ("Operation Neptune Spear", ["Operation Neptune Spear", "Neptune Spear"], "The May 2011 raid that killed Osama bin Laden."),
+    ("Operation Anaconda", ["Operation Anaconda"], "U.S.-led battle in eastern Afghanistan, March 2002."),
+    ("Operation Allied Force", ["Operation Allied Force"], "NATO air campaign against Yugoslavia, 1999."),
+    ("Operation Odyssey Dawn", ["Operation Odyssey Dawn", "Operation Unified Protector"], "U.S./NATO intervention in Libya, 2011."),
+    ("Operation Cast Lead", ["Operation Cast Lead", "Cast Lead"], "Israeli offensive in Gaza, 2008–2009."),
+    ("Operation Protective Edge", ["Operation Protective Edge", "Protective Edge"], "Israeli offensive in Gaza, 2014."),
+    ("Operation Swords of Iron", ["Swords of Iron", "Operation Swords of Iron"], "Israel's name for the Gaza war that began in October 2023."),
+    ("Surge (Iraq 2007)", ["troop surge", "Iraq surge"], "2007 U.S. troop increase in Iraq."),
+    ("Special military operation", ["special military operation"], "Russia's official term for its 2022 invasion of Ukraine."),
+]
+
+ENTITIES = {"agency": AGENCY, "technology": TECHNOLOGY, "program": PROGRAM}
+
+STRIP_PATTERNS = [
+    r"(?m)^\s*(?:Classification|CLASSIFICATION)\s*:\s*[A-Z/ ]+$",
+]
+
+IDEAS = [
+    ("Civilian casualties", [r"\bCIVCAS\b", r"(?i:\bcivilian casualt)", r"(?i:\bcollateral damage\b)", r"(?i:\bnon-?combatants?\b)", r"(?i:\bcivilians? (?:killed|wounded|injured))"],
+     "Civilian deaths and injuries."),
+    ("Friendly fire", [r"(?i:\bfriendly fire\b)", r"(?i:\bblue[- ]on[- ]blue\b)", r"(?i:\bfratricide\b)", r"(?i:\bgreen[- ]on[- ]blue\b)"],
+     "Friendly-fire incidents and insider attacks."),
+    ("IED attacks", [r"\bIEDs?\b", r"\bVBIEDs?\b", r"(?i:\bimprovised explosive)", r"(?i:\broadside bomb)", r"\bEFPs?\b"],
+     "Roadside bombs and improvised explosives."),
+    ("Air strikes & close air support", [r"(?i:\bair ?strikes?\b)", r"(?i:\bclose air support\b)", r"\bCAS\b", r"(?i:\bsorties?\b)", r"(?i:\bbombing\b)", r"(?i:\bprecision[- ]guided\b)"],
+     "Air strikes and close air support."),
+    ("Drone warfare", [r"(?i:\bdrones?\b)", r"\bUAVs?\b", r"\bUAS\b", r"(?i:\bunmanned\b)", r"(?i:\bloitering munition)"],
+     "Armed and surveillance drones."),
+    ("Escalation of force", [r"(?i:\bescalation of force\b)", r"\bEOF\b", r"(?i:\bwarning shots?\b)"],
+     "Escalation-of-force incidents at checkpoints and convoys."),
+    ("Special operations & raids", [r"(?i:\bnight raids?\b)", r"(?i:\bspecial operations? forces\b)", r"\bSOF\b", r"(?i:\bkill or capture\b)", r"(?i:\bhigh[- ]value targets?\b)", r"\bHVTs?\b"],
+     "Special-forces raids and targeted killing."),
+    ("Rules of engagement", [r"(?i:\brules of engagement\b)", r"\bROE\b", r"(?i:\bpositive identification\b)", r"\bPID\b", r"(?i:\bhostile intent\b)"],
+     "Rules of engagement and the use of force."),
+    ("Casualties & medevac", [r"\bKIA\b", r"\bWIA\b", r"\bMEDEVAC\b", r"\bCASEVAC\b", r"(?i:\bkilled in action\b)", r"(?i:\bwounded in action\b)"],
+     "Military casualties and medical evacuation."),
+    ("Counterinsurgency", [r"\bCOIN\b", r"(?i:\bcounter-?insurgen)", r"(?i:\binsurgen)", r"(?i:\bhearts and minds\b)"],
+     "Counterinsurgency operations."),
+    ("Private military contractors", [r"(?i:\bprivate (?:military|security) (?:contractor|company|firm))", r"\bPMCs?\b", r"(?i:\bsecurity contractors?\b)"],
+     "Private military and security contractors."),
+    ("Logistics & convoys", [r"(?i:\bconvoys?\b)", r"(?i:\blogistics?\b)", r"(?i:\bsupply (?:routes?|lines?)\b)", r"\bMSR\b"],
+     "Supply lines, convoys and logistics."),
+    ("Electronic & cyber warfare", [r"(?i:\belectronic warfare\b)", r"(?i:\bjamming\b)", r"(?i:\bcyber (?:operations?|warfare|attack))", r"(?i:\bGPS spoofing\b)"],
+     "Electronic and cyber warfare."),
+    ("Missiles & air defense", [r"(?i:\bmissiles?\b)", r"(?i:\bair defen[cs]e\b)", r"\bSAMs?\b", r"(?i:\binterceptors?\b)", r"(?i:\bballistic\b)"],
+     "Missile strikes and air defense."),
+    ("Nuclear forces & deterrence", [r"\bICBMs?\b", r"\bSLBMs?\b", r"(?i:\bnuclear (?:forces|arsenal|posture|deterren))", r"(?i:\bdeterrence\b)", r"(?i:\bwarheads?\b)"],
+     "Nuclear forces and deterrence."),
+]
+
+TIMELINE_PRESETS = [
+    ("Iraq · Afghanistan · Syria · Ukraine", "Iraq|Afghanistan|Syria|Ukraine"),
+    ("IEDs · air strikes · civilian casualties", "IED attacks|Air strikes & close air support|Civilian casualties"),
+]
