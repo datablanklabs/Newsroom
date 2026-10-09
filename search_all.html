@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, gchip, docmeta with context %}
+{% block title %}{{ q or 'Search all' }} — Newsroom{% endblock %}
+{% block body %}
+<form action="{{ url_for('search_all') }}" class="searchbar">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search every corpus" autofocus>
+  <button class="btn primary">Search all</button>
+</form>
+<div class="hint">Runs the same full-text search in every built corpus. FTS5 syntax: <code>"exact phrase"</code> · <code>prefix*</code> · <code>A OR B</code> · <code>A NOT B</code> · <code>NEAR(a b, 10)</code>.</div>
+{% if q and not sections %}<p class="muted">No results in any corpus.</p>{% endif %}
+{% if not q %}<p class="muted">Type a name, phrase or keyword to see where it appears across all corpora.</p>{% endif %}
+{% if gents %}
+<section class="card" style="margin-top:16px">
+  <h2 style="margin:0 0 6px">Entities across all collections</h2>
+  {% for e in gents %}{{ gchip(e, e.doc_count) }}{% endfor %}
+  <div class="small" style="margin-top:6px"><a href="{{ url_for('all.entities', q=q) }}">All matching entities →</a></div>
+</section>
+{% endif %}
+{% for s in sections %}
+<section class="card" style="margin-top:16px">
+  <h2 style="margin:0 0 4px"><a href="{{ url_for('c.search', cid=s.c.id, q=q) }}">{{ s.c.title }}</a>
+    <span class="small muted">{{ s.total|num }}{{ '+' if s.capped }} document{{ 's' if s.total != 1 }}</span></h2>
+  {% if s.err %}<p class="small" style="color:var(--t-idea)">{{ s.err }}</p>{% endif %}
+  {% if s.ents %}<div style="margin:6px 0"><span class="small muted">Entities:</span> {% for e in s.ents %}{{ chip(e, e.doc_count, cid=s.c.id) }}{% endfor %}</div>{% endif %}
+  {% for d in s.results %}
+  <div class="result">
+    <div class="title"><a href="{{ url_for('c.doc', cid=s.c.id, doc_id=d.id, q=q) }}">{{ d.title }}</a></div>
+    <div class="meta">{{ docmeta(d) }}{% if d.match_pages %} · matches on {{ d.match_pages|length }} page{{ 's' if d.match_pages|length > 1 }}{% endif %}</div>
+    {% for pg, sn in d.snips[:2] %}<div class="snip"><a class="pg" href="{{ url_for('c.doc', cid=s.c.id, doc_id=d.id, q=q) }}#p{{ pg }}">p.{{ pg }}</a>{{ sn|snippet }}</div>{% endfor %}
+  </div>
+  {% endfor %}
+  {% if s.total > s.results|length %}<a class="small" href="{{ url_for('c.search', cid=s.c.id, q=q) }}">All results in {{ s.c.title }} →</a>{% endif %}
+</section>
+{% endfor %}
+{% endblock %}

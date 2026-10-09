@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Newsroom — corpora{% endblock %}
+{% block body %}
+<h1>Newsroom</h1>
+<p class="secondary" style="max-width:860px">Full-text search, entity index and relationship networks over leaked, declassified and published document collections. Each corpus has its own index; search below runs across all of them.</p>
+<form action="{{ url_for('search_all') }}" class="searchbar" style="max-width:720px;margin-top:14px">
+  <input type="search" name="q" autofocus placeholder='Search every corpus: a name, "a phrase", prefix*, A OR B'>
+  <button class="btn primary">Search all</button>
+</form>
+
+{% if all_corpora %}
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+  <span class="small muted" style="align-self:center">Across all {{ all_corpora|length }} built collections:</span>
+  <a class="btn" href="{{ url_for('all.entities') }}">Entities</a>
+  <a class="btn" href="{{ url_for('all.graph') }}">Network</a>
+  <a class="btn" href="{{ url_for('all.timeline') }}">Timeline</a>
+</div>
+{% endif %}
+
+<div class="grid two" style="margin-top:20px">
+{% for card in cards %}{% set c = card.c %}
+  <section class="card corpus-card">
+    <h2 style="margin:0 0 4px">{% if card.built %}<a href="{{ url_for('c.index', cid=c.id) }}">{{ c.title }}</a>{% else %}{{ c.title }}{% endif %}</h2>
+    <div class="small muted mono">{{ c.id }} · packs: {{ c.packs|join(', ') }}</div>
+    {% if c.description %}<p class="secondary small" style="margin:8px 0">{{ c.description }}</p>{% endif %}
+    {% if card.built %}
+      <div class="small">{{ card.docs|num }} documents · {{ card.pages|num }} pages · {{ card.entities|num }} entities{% if card.years and card.years.lo %} · {{ card.years.lo }}–{{ card.years.hi }}{% endif %}</div>
+      <div class="small muted">built {{ card.built_at }}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <a class="btn primary" href="{{ url_for('c.index', cid=c.id) }}">Open</a>
+        <a class="btn" href="{{ url_for('c.graph', cid=c.id) }}">Network</a>
+        <a class="btn" href="{{ url_for('c.entities', cid=c.id) }}">Entities</a>
+      </div>
+    {% else %}
+      <div class="small muted" style="margin-top:6px">Not built yet. From the project folder:</div>
+      <pre class="cmd">.venv/bin/python build/extract.py --corpus {{ c.id }}
+.venv/bin/python build/index.py --corpus {{ c.id }}</pre>
+      <div class="small muted">Source: <span class="mono">{{ c.root }}</span></div>
+    {% endif %}
+  </section>
+{% else %}
+  <p class="muted">No corpora configured. Copy <code>corpora/_template.toml</code> to <code>corpora/&lt;name&gt;.toml</code> and point it at a folder.</p>
+{% endfor %}
+</div>
+<p class="small muted" style="margin-top:18px">Add a corpus: copy <code>corpora/_template.toml</code>, set <code>root</code> and <code>packs</code>, then run the two build commands. Knowledge packs live in <code>lib/packs/</code> (<code>python -m lib.packs</code> lists them).</p>
+{% endblock %}

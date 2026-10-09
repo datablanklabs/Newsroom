@@ -1,0 +1,9 @@
+{% macro chip(e, n=None, cid=None) -%}
+<a class="chip t-{{ e.type }}" href="{{ url_for('c.entity', eid=e.id, cid=cid) if cid else url_for('c.entity', eid=e.id) }}" title="{{ TYPE_SINGULAR[e.type] }}"><span class="dot"></span>{{ e.name }}{% if n is not none %}<span class="n">{{ n|num }}</span>{% endif %}</a>
+{%- endmacro %}
+{% macro gchip(e, n=None) -%}
+<a class="chip t-{{ e.type }}" href="{{ url_for('all.entity', key=e.gkey) }}" title="{{ TYPE_SINGULAR[e.type] }}"><span class="dot"></span>{{ e.name }}{% if n is not none %}<span class="n">{{ n|num }}</span>{% endif %}</a>
+{%- endmacro %}
+{% macro docmeta(d) -%}
+{% if d.doc_date %}{{ d.doc_date }}{% if d.date_source and 'est' in d.date_source %}<span title="{{ d.date_source }}">*</span>{% endif %} · {% endif %}{{ d.collection }} · {{ d.origin }}{% if d.classification %} · {{ d.classification }}{% endif %}{% if d.kind and d.kind not in ('pdf',) %} · {{ KIND_LABEL.get(d.kind, d.kind) }}{% endif %} · {{ d.pages }} p.{% if d.publisher %} · {{ d.publisher }}{% endif %}
+{%- endmacro %}

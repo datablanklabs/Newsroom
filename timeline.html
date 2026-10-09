@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Timeline — {{ scope_title }}{% endblock %}
+{% block body %}
+<h1>Timeline{% if global_view %} <span class="secondary" style="font-weight:400">across all collections</span>{% endif %}</h1>
+<p class="secondary small" style="max-width:900px;margin-top:0">Compare up to 8 entities by the dated documents that mention them{% if global_view %} in every collection (entities are matched across collections by type and name){% endif %}. Collections are uneven over time, so <b>share of year</b> divides by the number of dated documents per year{% if global_view %} in all collections together{% endif %}, which corrects for that. {{ year_note }} Estimated dates are marked * on document pages.</p>
+<div class="controls">
+  <label class="ac" style="min-width:260px">Add entity
+    <input type="search" id="tl-input" placeholder="type a name…" autocomplete="off"><div class="ac-list" id="tl-ac"></div></label>
+  <label>Measure <select id="tl-mode" style="width:auto"><option value="share">Share of year's documents (%)</option><option value="docs">Number of documents</option></select></label>
+  <label>Presets <select id="tl-preset" style="width:auto">
+    <option value="">—</option>
+    {% for label, names in presets %}<option value="{{ names }}">{{ label }}</option>{% endfor %}
+  </select></label>
+  <button id="tl-clear">Clear</button>
+  <button class="viewtoggle" id="tl-table-toggle">Show table</button>
+</div>
+<div class="legend" id="tl-legend"></div>
+<div class="card"><div class="chart" id="tl-chart"></div></div>
+<div id="tl-table" style="display:none;margin-top:12px;overflow:auto"></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='timeline.js') }}"></script>
+{% endblock %}

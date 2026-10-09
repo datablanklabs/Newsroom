@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Network — {{ scope_title }}{% endblock %}
+{% block body %}
+<h1>Relationship network{% if global_view %} <span class="secondary" style="font-weight:400">across all collections</span>{% endif %}</h1>
+<p class="secondary small" style="max-width:900px;margin-top:0">Nodes are entities, sized by how many documents mention them{% if global_view %}, and merged across collections by type and name (so two different people with the same name become one node){% endif %}. <b>Co-occurrence</b> links join entities that appear in the same document ({% if window %}within a {{ window }}-page window{% else %}within each collection's page window; shared documents are added up over collections{% endif %}){% if n_relations %}; <b>direct relations</b> come from structured data such as email headers and company registries ({{ n_relations|num }} in {{ 'all collections' if global_view else 'this corpus' }}){% endif %}. Color and shape both encode type. <b>Shared documents</b> weights links by raw co-occurrence, which favors big hubs. <b>Association (NPMI)</b> favors pairs that appear together more than chance predicts, which surfaces specific links. Drag nodes, scroll to zoom, click a node for details, double-click to focus on it.</p>
+<div class="controls" id="controls">
+  <div class="typesrow">
+    <div class="small secondary" style="margin-bottom:3px">Entity types (toggle) — color and shape</div>
+    <div class="types" id="types"></div>
+  </div>
+  {% if n_relations %}<label>Links
+    <select id="source" style="width:auto"><option value="cooccurrence">Co-occurrence</option><option value="relations">Direct relations</option></select></label>{% endif %}
+  <label><span>Nodes: <b id="limit-v" class="v">160</b></span><input type="range" id="limit" min="30" max="500" step="10" value="160"></label>
+  <label><span>Min. shared docs: <b id="mindocs-v" class="v">4</b></span><input type="range" id="mindocs" min="1" max="40" value="4"></label>
+  <label><span>Links per node: <b id="k-v" class="v">6</b></span><input type="range" id="k" min="1" max="20" value="6"></label>
+  <label>Link strength
+    <select id="metric" style="width:auto"><option value="docs">Shared documents</option><option value="npmi">Association (NPMI)</option></select></label>
+  <label>Hide hubs over <select id="maxdf" style="width:auto">
+    {% set opts = [1000000, 50000, 20000, 5000, 1500, 800, 400, 200]|reject('equalto', hide_hubs)|list + [hide_hubs] %}
+    {% for v in opts|sort(reverse=true) %}<option value="{{ v }}" {{ 'selected' if v == hide_hubs }}>{{ 'no limit' if v >= 1000000 else (v|num ~ ' docs') }}{% if v == hide_hubs and hub_hint %} ({{ hub_hint }}){% endif %}</option>{% endfor %}
+  </select></label>
+  <label style="flex-direction:row;align-items:center;gap:5px"><input type="checkbox" id="hideauto"> hide auto-detected</label>
+  <label class="ac" style="min-width:220px">Focus on entity
+    <input type="search" id="focus-input" placeholder="type a name…" autocomplete="off"><div class="ac-list" id="ac"></div></label>
+  <button id="clear-focus" style="display:none">Clear focus</button>
+</div>
+<div class="graphwrap">
+  <div id="graph" class="netgraph"><div class="status" id="status"></div></div>
+  <aside id="panel"><div class="card"><p class="muted small">Click a node to see its details and strongest links.</p></div></aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='graph.js') }}"></script>
+<script>NetGraph.page({ focus: {{ focus|tojson }} });</script>
+{% endblock %}

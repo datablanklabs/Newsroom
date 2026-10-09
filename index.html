@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip with context %}
+{% block body %}
+<h1>{{ corpus.title }}</h1>
+<p class="secondary" style="max-width:900px">{{ corpus.description or 'Full-text search and entity network.' }}
+{{ stats.docs|num }} documents, {{ stats.pages|num }} pages{% if stats.ocr %} ({{ stats.ocr|num }} recovered by OCR){% endif %}.
+{% if has_findings %}Start with the <a href="{{ url_for('c.findings') }}">findings report</a>, or search below.{% endif %}</p>
+
+<form action="{{ url_for('c.search') }}" class="searchbar" style="max-width:720px;margin-top:14px">
+  <input type="search" name="q" autofocus placeholder='Try: {{ (corpus.ui.search_examples or ['"exact phrase"', 'name', 'prefix*'])|join(" · ") }}'>
+  <button class="btn primary">Search</button>
+</form>
+<div class="hint">Supports SQLite FTS5 syntax: <code>"exact phrase"</code>, <code>prefix*</code>, <code>A OR B</code>, <code>A NOT B</code>, <code>NEAR(a b, 10)</code>. <code>*</code> browses with filters only.</div>
+
+<div class="tiles">
+  <div class="tile"><div class="v">{{ stats.docs|num }}</div><div class="l">unique documents</div></div>
+  <div class="tile"><div class="v">{{ stats.pages|num }}</div><div class="l">pages indexed</div></div>
+  <div class="tile"><div class="v">{{ stats.ocr|num }}</div><div class="l">pages OCR'd</div></div>
+  <div class="tile"><div class="v">{{ stats.entities|num }}</div><div class="l">entities</div></div>
+  <div class="tile"><div class="v">{{ stats.edges|num }}</div><div class="l">co-occurrence links</div></div>
+  {% if stats.relations %}<div class="tile"><div class="v">{{ stats.relations|num }}</div><div class="l">direct relations</div></div>{% endif %}
+</div>
+
+<div class="grid two">
+  <section class="card">
+    <h3 style="margin-top:0">Documents by (estimated) year</h3>
+    <div class="chart" id="year-chart" data-rows='{{ by_year|tojson }}' data-x="year" data-y="n" data-ylabel="documents"></div>
+    <div class="small muted">{{ corpus.ui.year_note or 'Dates come from headers, file names or the text; estimates are marked *.' }} Click a bar to list its documents.</div>
+  </section>
+  <section class="card">
+    <h3 style="margin-top:0">Collections</h3>
+    <table>
+      <tr><th>Collection</th><th class="num">Docs</th><th class="num">Pages</th></tr>
+      {% for r in by_collection %}<tr><td><a href="{{ url_for('c.search', q='*', collection=r.collection) }}">{{ r.collection }}</a></td><td class="num">{{ r.n|num }}</td><td class="num">{{ r.p|num }}</td></tr>{% endfor %}
+    </table>
+    <h3>Origin</h3>
+    <table>
+      {% for r in by_origin %}<tr><td><a href="{{ url_for('c.search', q='*', origin=r.origin) }}">{{ r.origin }}</a></td><td class="num">{{ r.n|num }}</td></tr>{% endfor %}
+    </table>
+    {% if by_kind|length > 1 %}
+    <h3>Document types</h3>
+    <table>
+      {% for r in by_kind %}<tr><td><a href="{{ url_for('c.search', q='*', kind=r.kind) }}">{{ KIND_LABEL.get(r.kind, r.kind) }}</a></td><td class="num">{{ r.n|num }}</td></tr>{% endfor %}
+    </table>
+    {% endif %}
+  </section>
+</div>
+
+<h2>Most-mentioned entities <span class="small muted">(by number of documents)</span></h2>
+<div class="grid four">
+{% for t in TYPE_ORDER %}
+  <section class="card">
+    <h3 style="margin-top:0"><span class="dot t-{{ t }}" style="display:inline-block;margin-right:6px"></span>{{ TYPE_LABEL[t] }} <a class="small" href="{{ url_for('c.entities', type=t) }}">all →</a></h3>
+    {% for e in top[t] %}{{ chip(e, e.doc_count) }}{% endfor %}
+  </section>
+{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  Charts.bars(document.getElementById('year-chart'), {
+    onClick: function (d) { location.href = BASE + '/search?q=*&year_from=' + d.year + '&year_to=' + d.year + '&sort=date'; }
+  });
+</script>
+{% endblock %}

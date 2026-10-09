@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, docmeta with context %}
+{% block title %}{{ d.title }} — {{ corpus.title }}{% endblock %}
+{% block body %}
+<div class="small muted"><a href="javascript:history.back()">← back</a></div>
+<h1>{{ d.title }}</h1>
+<div class="muted small" style="margin-bottom:12px">{{ docmeta(d) }}</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+  {% if d.has_original %}<a class="btn primary" href="{{ url_for('c.original', doc_id=d.id) }}" target="_blank" rel="noopener">Open original {{ 'PDF' if d.kind == 'pdf' else 'file' }}</a>{% endif %}
+  {% if (d.fields.get('Link') or '').startswith(('https://', 'http://')) %}<a class="btn" href="{{ d.fields['Link'] }}" target="_blank" rel="noopener noreferrer">View at source ↗</a>{% endif %}
+  {% if q %}<a class="btn" href="{{ url_for('c.doc', doc_id=d.id) }}">Clear highlights</a>{% endif %}
+</div>
+<div class="docgrid">
+  <section>
+    <dl class="kv card" style="margin:0 0 16px">
+      <dt>File</dt><dd class="mono">{{ d.relpath }}</dd>
+      {% if d.duplicates %}<dt>Duplicates</dt><dd class="mono small">{% for p in d.duplicates %}{{ p }}<br>{% endfor %}</dd>{% endif %}
+      {% for k, v in d.fields.items() if k != 'Link' %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}
+      {% if d.author and not d.fields.get('From') %}<dt>From</dt><dd>{{ d.author }}</dd>{% endif %}
+      <dt>Date</dt><dd>{{ d.doc_date or 'unknown' }} {% if d.date_source %}<span class="muted small">({{ d.date_source }})</span>{% endif %}</dd>
+      {% if d.published %}<dt>Published</dt><dd>{{ d.published }} {% if d.publisher %}· {{ d.publisher }}{% endif %}</dd>{% elif d.publisher %}<dt>Source</dt><dd>{{ d.publisher }}</dd>{% endif %}
+      <dt>Origin</dt><dd>{{ d.origin }} {% if d.classification %}· {{ d.classification }}{% endif %}</dd>
+      <dt>Text</dt><dd>{{ KIND_LABEL.get(d.kind, d.kind) }} · {{ d.pages }} page{{ 's' if d.pages != 1 }}, {{ d.chars|num }} characters{% if d.ocr_pages %}, {{ d.ocr_pages }} OCR'd (expect recognition errors){% endif %}</dd>
+      {% if d.error %}<dt>Extraction</dt><dd class="small" style="color:var(--t-idea)">{{ d.error }}</dd>{% endif %}
+    </dl>
+    {% for p in pages %}
+    <article class="page" id="p{{ p.page_no }}">
+      <header><span>Page {{ p.page_no }} {% if p.ocr %}· OCR{% endif %}</span>
+        <span>{% if d.kind == 'pdf' and d.has_original %}<a href="{{ url_for('c.original', doc_id=d.id) }}#page={{ p.page_no }}" target="_blank" rel="noopener">view page in PDF ↗</a>{% elif d.kind in ('image','image-set') %}<a href="{{ url_for('c.original', doc_id=d.id, n=p.page_no) }}" target="_blank" rel="noopener">image ↗</a>{% endif %}</span></header>
+      {% if d.kind in ('image','image-set') %}<img loading="lazy" src="{{ url_for('c.original', doc_id=d.id, n=p.page_no) }}" alt="Page {{ p.page_no }} scan">{% endif %}
+      <pre>{{ p.html if p.text else '(no text recovered)' }}</pre>
+    </article>
+    {% endfor %}
+  </section>
+  <aside><div class="sticky">
+    {% if relations %}
+    <h3 style="margin-top:0">Relations in this document</h3>
+    {% for r in relations[:40] %}<div style="margin-bottom:4px;font-size:13.5px">{{ chip({'id': r.aid, 'name': r.aname, 'type': r.atype}) }}<span class="small muted">{{ r.type }} →</span> {{ chip({'id': r.bid, 'name': r.bname, 'type': r.btype}) }}</div>{% endfor %}
+    {% endif %}
+    <h3 {% if not relations %}style="margin-top:0"{% endif %}>Entities in this document</h3>
+    {% for t, ents in grouped.items() if ents %}
+      <div class="small muted" style="margin:10px 0 4px">{{ TYPE_LABEL[t] }}</div>
+      {% for e in ents[:30] %}{{ chip(e, e.n) }}{% endfor %}
+      {% if ents|length > 30 %}<span class="small muted">+{{ ents|length - 30 }} more</span>{% endif %}
+    {% endfor %}
+    {% if related %}
+    <h3>Related documents</h3>
+    <div class="small muted" style="margin-bottom:6px">Sharing the most distinctive entities</div>
+    {% for r in related %}<div style="margin-bottom:6px;font-size:13.5px"><a href="{{ url_for('c.doc', doc_id=r.id) }}">{{ r.title }}</a> <span class="muted small">{{ r.doc_date or '' }} · {{ r.shared }} shared</span></div>{% endfor %}
+    {% endif %}
+  </div></aside>
+</div>
+{% endblock %}

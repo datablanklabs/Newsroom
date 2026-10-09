@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_macros.html" import chip, docmeta with context %}
+{% block title %}{{ q or 'Search' }} — {{ corpus.title }}{% endblock %}
+{% macro facet_link(key, value, n, label=None) -%}
+{% set a = dict(args) %}{% if filters[key] == value %}{% set _ = a.pop(key, None) %}{% else %}{% set _ = a.update({key: value}) %}{% endif %}
+<a href="{{ url_for('c.search', **a) }}" class="{{ 'on' if filters[key] == value }}"><span>{{ '✓ ' if filters[key] == value }}{{ label or value }}</span><span class="n">{{ n|num }}</span></a>
+{%- endmacro %}
+{% block body %}
+<form action="{{ url_for('c.search') }}" class="searchbar">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search all pages">
+  {% for k in ('collection','origin','classification','kind','year_from','year_to','entity','entity2') %}{% if args.get(k) %}<input type="hidden" name="{{ k }}" value="{{ args[k] }}">{% endif %}{% endfor %}
+  <select name="sort" style="width:auto" onchange="this.form.submit()">
+    <option value="relevance" {{ 'selected' if filters.sort=='relevance' }}>Relevance</option>
+    <option value="date" {{ 'selected' if filters.sort=='date' }}>Oldest first</option>
+    <option value="date_desc" {{ 'selected' if filters.sort=='date_desc' }}>Newest first</option>
+  </select>
+  <button class="btn primary">Search</button>
+</form>
+<div class="hint">FTS5 syntax: <code>"exact phrase"</code> · <code>prefix*</code> · <code>A OR B</code> · <code>A NOT B</code> · <code>NEAR(a b, 10)</code>. Use <code>*</code> to browse with filters only. <a href="{{ url_for('search_all', q=q) if q and q != '*' else url_for('search_all') }}">Search every corpus →</a></div>
+{% if err %}<p style="color:var(--t-idea)">{{ err }}</p>{% endif %}
+
+{% if ent_matches %}
+<div style="margin:14px 0 4px"><span class="small muted">Matching entities:</span> {% for e in ent_matches %}{{ chip(e, e.doc_count) }}{% endfor %}</div>
+{% endif %}
+{% if entity %}
+<p>Filtered to documents mentioning {{ chip(entity, entity.doc_count) }}{% if entity2 %} and {{ chip(entity2, entity2.doc_count) }}{% endif %} {% set a = dict(args) %}{% set _ = a.pop('entity') %}{% set _ = a.pop('entity2', None) %}<a class="small" href="{{ url_for('c.search', **a) }}">remove</a></p>
+{% endif %}
+
+<div class="layout" style="margin-top:12px">
+  <aside class="facets">
+    {% if total %}<div><strong>{{ total|num }}</strong> document{{ "s" if total != 1 }}</div>{% endif %}
+    {% for key, label in (('collection','Collection'),('origin','Origin'),('classification','Classification'),('kind','Document type')) %}
+      {% if facets.get(key) and (facets[key]|length > 1 or filters[key]) %}<h4>{{ label }}</h4>{% for v, n in facets[key].most_common(14) %}{{ facet_link(key, v, n, KIND_LABEL.get(v, v) if key == 'kind' else None) }}{% endfor %}{% endif %}
+    {% endfor %}
+    {% if facets.get('year') %}
+      <h4>Year</h4>
+      <div class="chart" id="facet-years" data-rows='{{ facets.year.items()|sort|map("list")|list|tojson }}'></div>
+      <form action="{{ url_for('c.search') }}" style="display:flex;gap:6px;margin-top:6px">
+        {% for k, v in args.items() if k not in ('year_from','year_to') %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+        <input type="number" name="year_from" placeholder="from" value="{{ filters.year_from or '' }}">
+        <input type="number" name="year_to" placeholder="to" value="{{ filters.year_to or '' }}">
+        <button>Go</button>
+      </form>
+    {% endif %}
+  </aside>
+  <section>
+    {% if not results and (q or entity) %}<p class="muted">No results.</p>{% endif %}
+    {% if not q and not entity and not results %}<p class="muted">Type a query above, or pick an entity on the <a href="{{ url_for('c.entities') }}">Entities</a> page.</p>{% endif %}
+    {% for d in results %}
+    <div class="result">
+      <div class="title"><a href="{{ url_for('c.doc', doc_id=d.id, q=q if q != '*' else None) }}">{{ d.title }}</a></div>
+      <div class="meta">{{ docmeta(d) }}{% if d.match_pages %} · matches on {{ d.match_pages|length }} page{{ 's' if d.match_pages|length > 1 }}{% endif %}</div>
+      {% for pg, s in d.snips %}<div class="snip"><a class="pg" href="{{ url_for('c.doc', doc_id=d.id, q=q) }}#p{{ pg }}">p.{{ pg }}</a>{{ s|snippet }}</div>{% endfor %}
+      {% if not d.snips and d.summary %}<div class="snip">{{ d.summary[:260] }}…</div>{% endif %}
+      <div style="margin-top:6px">{% for e in d.ents %}{{ chip(e, e.n) }}{% endfor %}</div>
+    </div>
+    {% endfor %}
+    {% if total > per %}
+    <div class="pager">
+      {% set a = dict(args) %}
+      {% if page > 1 %}{% set _ = a.update({'page': page-1}) %}<a class="btn" href="{{ url_for('c.search', **a) }}">← Prev</a>{% endif %}
+      <span class="muted small">Page {{ page }} of {{ ((total - 1) // per) + 1 }}</span>
+      {% if page * per < total %}{% set _ = a.update({'page': page+1}) %}<a class="btn" href="{{ url_for('c.search', **a) }}">Next →</a>{% endif %}
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  var fy = document.getElementById('facet-years');
+  if (fy) {
+    var rows = JSON.parse(fy.dataset.rows).map(function (r) { return { year: r[0], n: r[1] }; });
+    fy.dataset.rows = JSON.stringify(rows); fy.dataset.x = 'year'; fy.dataset.y = 'n'; fy.dataset.ylabel = 'results';
+    Charts.bars(fy, { height: 110, compact: true, onClick: function (d) {
+      var u = new URL(location.href); u.searchParams.set('year_from', d.year); u.searchParams.set('year_to', d.year); u.searchParams.delete('page'); location.href = u;
+    } });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ corpus.title if corpus else 'Newsroom' }}{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script>try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script>
+  window.BASE = {{ (base or '')|tojson }};
+  window.GLOBAL = {{ (global_view or false)|tojson }};
+  window.TYPES = {{ TYPE_ORDER|tojson }};
+  window.TYPE_LABEL = {{ TYPE_SINGULAR|tojson }};
+</script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="{{ url_for('library') }}">Newsroom</a>
+  {% if corpus and base %}
+  <select class="corpus-switch" aria-label="Switch corpus" onchange="location.href = this.value">
+    {% for c in all_corpora %}<option value="{{ url_for('c.index', cid=c.id) }}" {{ 'selected' if c.id == corpus.id }}>{{ c.title }}</option>{% endfor %}
+  </select>
+  <form class="topsearch" action="{{ url_for('c.search') }}">
+    <input type="search" name="q" value="{{ q|default('') }}" placeholder="Search {{ corpus.title }}…{% if corpus.ui.search_examples %}  e.g.  {{ corpus.ui.search_examples[:3]|join('   ') }}{% endif %}" aria-label="Search this corpus">
+  </form>
+  <nav>
+    {% set ep = request.endpoint %}
+    <a href="{{ url_for('c.index') }}" class="{{ 'active' if ep=='c.index' }}">Overview</a>
+    <a href="{{ url_for('c.search') }}" class="{{ 'active' if ep=='c.search' }}">Search</a>
+    <a href="{{ url_for('c.entities') }}" class="{{ 'active' if ep in ('c.entities','c.entity') }}">Entities</a>
+    <a href="{{ url_for('c.graph') }}" class="{{ 'active' if ep=='c.graph' }}">Network</a>
+    <a href="{{ url_for('c.timeline') }}" class="{{ 'active' if ep=='c.timeline' }}">Timeline</a>
+    {% if has_findings %}<a href="{{ url_for('c.findings') }}" class="{{ 'active' if ep=='c.findings' }}">Findings</a>{% endif %}
+    <button id="theme-toggle" title="Toggle light/dark" aria-label="Toggle light/dark theme">◐</button>
+  </nav>
+  {% else %}
+  <form class="topsearch" action="{{ url_for('search_all') }}">
+    <input type="search" name="q" value="{{ q|default('') }}" placeholder="Search every corpus…" aria-label="Search every corpus">
+  </form>
+  <nav>
+    {% set ep = request.endpoint %}
+    <a href="{{ url_for('library') }}" class="{{ 'active' if ep=='library' }}">Corpora</a>
+    <a href="{{ url_for('search_all') }}" class="{{ 'active' if ep=='search_all' }}">Search all</a>
+    {% if all_corpora %}
+    <a href="{{ url_for('all.entities') }}" class="{{ 'active' if ep in ('all.entities','all.entity') }}">Entities</a>
+    <a href="{{ url_for('all.graph') }}" class="{{ 'active' if ep=='all.graph' }}">Network</a>
+    <a href="{{ url_for('all.timeline') }}" class="{{ 'active' if ep=='all.timeline' }}">Timeline</a>
+    {% endif %}
+    <button id="theme-toggle" title="Toggle light/dark" aria-label="Toggle light/dark theme">◐</button>
+  </nav>
+  {% endif %}
+</header>
+<main>{% if global_updating %}<p class="small muted" role="status" style="margin:0 0 12px">Adding newly built collections to the cross-collection index; reload in a minute to include them.</p>{% endif %}{% block body %}{% endblock %}</main>
+<div class="tooltip" id="tooltip" role="status"></div>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function () {
+  var root = document.documentElement;
+  var dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+  window.dispatchEvent(new Event('themechange'));
+});
+</script>
+<script src="{{ url_for('static', filename='d3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='charts.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

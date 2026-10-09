@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import gchip with context %}
+{% block title %}Entities — all collections{% endblock %}
+{% block body %}
+<h1>Entities <span class="secondary" style="font-weight:400">across all collections</span></h1>
+<p class="secondary small" style="max-width:860px">People, agencies, companies, programs, technologies, places, organizations, themes and identifiers from all {{ n_corpora }} built collections. An entity found in several collections is matched by type and name, ignoring case and accents on Latin letters, so two different people with the same name are merged here; each collection's own entity page keeps them apart. Entries marked <span class="auto-flag">auto</span> were detected automatically in every collection that has them and may include OCR noise.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+  <a class="chip" href="{{ url_for('all.entities', q=q) }}" style="{{ 'font-weight:650' if not t }}">All</a>
+  {% for ty in TYPE_ORDER %}<a class="chip t-{{ ty }}" href="{{ url_for('all.entities', type=ty, q=q) }}" style="{{ 'font-weight:650' if t==ty }}"><span class="dot"></span>{{ TYPE_LABEL[ty] }}<span class="n">{{ counts.get(ty, 0)|num }}</span></a>{% endfor %}
+</div>
+<form style="display:flex;gap:8px;max-width:560px;margin-bottom:12px">
+  <input type="hidden" name="type" value="{{ t }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Filter entities by name">
+  <label class="small" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="checkbox" name="hide_auto" value="1" {{ 'checked' if not show_auto }} onchange="this.form.submit()"> hide auto-detected</label>
+  <button>Filter</button>
+</form>
+<table>
+  <tr><th>Entity</th><th>Type</th><th>Description</th><th class="num">Docs</th><th class="num">Collections</th><th class="num">Years</th></tr>
+  {% for e in rows %}
+  <tr><td>{{ gchip(e) }}{% if e.auto %} <span class="auto-flag">auto</span>{% endif %}</td><td class="small">{{ e.type }}</td>
+      <td class="small secondary">{{ e.description if not e.auto else '' }}</td>
+      <td class="num">{{ e.doc_count|num }}</td><td class="num">{{ e.n_corpora }}</td>
+      <td class="num small">{{ e.first_year or '' }}{% if e.last_year and e.last_year != e.first_year %}–{{ e.last_year }}{% endif %}</td></tr>
+  {% endfor %}
+</table>
+{% if rows|length == 1000 %}<p class="small muted">Showing the first 1,000. Narrow with a filter.</p>{% endif %}
+{% endblock %}
