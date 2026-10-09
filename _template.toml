@@ -1,0 +1,144 @@
+# Template for a new corpus. Copy to corpora/<id>.toml (the file name is the corpus id), set
+# `root`, pick packs, then:
+#     .venv/bin/python build/extract.py --corpus <id>
+#     .venv/bin/python build/index.py   --corpus <id>
+# Every key below shows its default; delete what you don't change. Files starting with "_" are
+# ignored by the app.
+
+title = "My release"
+description = "One sentence on what this is, who published it and when."
+root = "/path/to/the/files"        # absolute, ~/..., $VAR/... or relative to the project folder
+include = []                        # globs on paths relative to root, e.g. ["emails/**", "*.pdf"]; empty = everything
+exclude = []                        # globs or folder names to skip entirely, e.g. ["torrents", "*.crdownload"]
+packs = ["core"]                    # knowledge packs (python -m lib.packs lists them):
+                                    #   core        countries, cities, leaders, international bodies, companies, media
+                                    #   markings    classification banners, court captions, declassification dates (rules only)
+                                    #   government  U.S. agencies & officials, FOIA stamps, letterhead origins (+ markings)
+                                    #   sigint      Five Eyes surveillance (Snowden)
+                                    #   diplomatic  State Department cables (TAGS topics, posts)
+                                    #   offshore    tax havens, corporate-service providers, shell-company vocabulary
+                                    #   military    forces, commands, weapons systems, operations, war-log vocabulary
+                                    #   coldwar     JFK/MLK records, CIA covert operations, NARA record forms
+                                    #   economic    central banks, regulators, banks, crypto (incl. Russian terms)
+                                    #   political   campaigns, parties, operatives, influence operations
+# findings = "notes/my-release.md"  # optional Markdown report shown at /findings
+
+[dates]
+min_year = 1900                     # dates outside [min_year, max_year] are ignored
+# max_year = 2026                   # default: this year
+# text_min_year / text_max_year     # bounds for "first date in the text" (default: min/max_year)
+# chart_min_year / chart_max_year   # x-axis of year charts (default: the data)
+# declassify_min_year / declassify_max_year   # bounds for the "Declassify On − 25 years" estimate
+two_digit_century = 1900            # how 2-digit years in headers are read ("28 JAN 62"); use 2000 for modern data
+
+[extract]
+formats = ["pdf", "image", "html", "text", "email", "mbox", "msg", "docx", "pptx", "xlsx", "odf", "rtf", "doc", "xls", "csv"]
+ocr = true                          # Tesseract for scanned pages and images
+ocr_lang = "eng"                    # e.g. "eng+rus" or "eng+ara" (brew install tesseract-lang)
+ocr_min_chars = 200                 # PDF pages with less text than this are OCR'd
+min_image_kb = 15                   # skip icons and spacer images
+page_scan_pattern = ""              # regex grouping page scans into one document: named groups (?P<base>…) and (?P<n>\d+)
+max_file_mb = 1024                  # skip bigger files (archives and record files are exempt)
+max_member_mb = 256                 # skip bigger archive members / email attachments
+archives = ["zip"]                  # also "tar" (tar/tgz/tbz2/txz), "7z", "rar" (read via macOS bsdtar; nothing is unpacked to disk)
+archive_members = []                # formats read from inside archives; empty = same as `formats`.
+                                    # Use ["pdf"] for archives that also hold malware or code.
+text_page_chars = 12000             # long text/office/email documents are split into pages of about this size (0 = never)
+sheet_page_rows = 200               # spreadsheet / CSV rows per page
+max_sheet_rows = 50000              # rows read per sheet
+email_attachments = true            # extract attachments as extra pages of their email
+sidecar = ""                        # "ia-hocr": PDFs from the Internet Archive with their OCR files saved alongside
+encoding_fallback = "utf-8"         # legacy text that is not UTF-8: "cp1252" Western, "cp1251" Russian, "cp1255" Hebrew
+                                    # (web pages that declare a charset are always read in it)
+
+[index]
+ner = true                          # spaCy named-entity recognition (cached per page)
+ner_model = "en_core_web_sm"        # e.g. "xx_ent_wiki_sm" for multilingual text
+ner_labels = ["PERSON"]             # add "ORG" for organizations, "GPE"/"LOC" for places
+ner_min_docs = 2                    # an NER name needs this many documents to become an entity
+codenames = true                    # auto-detect ALL-CAPS codenames (intelligence/military); turn off for emails, cables
+allcaps_matching = "auto"           # match names on ALL-CAPS pages (telegrams, old cables) case-insensitively; "off"
+suppress_aliases = []               # pack-defined names that misfire in this corpus, e.g. ["SEC", "BP"] (full names still match)
+keep_aliases = []                   # names a pack turns off (coldwar: "ETA", "SEC" ...) that should match here
+identifiers = []                    # pattern entities: "email", "iban", "phone"
+identifier_min_docs = 2
+window = 5                          # pages per co-occurrence window
+max_window_entities = 400           # windows with more entities add no co-occurrence links (registry hubs, huge tables)
+min_edge_docs = 2                   # co-occurrence links need this many shared documents
+
+[metadata]
+collection_depth = 1                # folder levels that name a collection
+collection_aliases = {}             # {"folder-name" = "Nicer label"}
+publishers = []                     # [["regex on path", "Publisher"], ...]
+html_origin = "Web page"
+default_origin = "Other / unknown"
+dedupe_prefer = []                  # path prefixes preferred when identical files are folded together
+title_strip = '^\d{4}-\d{2}-\d{2}_?'  # removed from file names before they become titles
+# origin rules from markings, tested in priority order (packs add their own; lower runs first):
+# [[metadata.origin_rules]]
+# pattern = "ACME CORP CONFIDENTIAL"
+# label = "Acme Corp"
+# priority = 30
+# target = "head"                   # "head" = first 20k chars, "top" = first 3k, "path" = file path
+
+[ui]
+search_examples = []                # shown in the search box placeholder
+hide_hubs = 800                     # network view: hide entities in more documents than this by default
+hub_hint = ""                       # e.g. "hides NSA, U.S."
+timeline_presets = []               # [["Label", "Entity A|Entity B"], ...] (packs add their own)
+year_note = ""                      # caption under the documents-by-year chart
+
+# Structured datasets: one document per row or per node. Remove if unused.
+# [[records]]
+# type = "csv"                      # one document per CSV row
+# path = "cables.csv"               # relative to root; globs allowed
+# name = "Cablegate"                # collection label
+# header = false                    # first row is a header (default true)
+# columns = ["id", "date", "ref", "origin", "classification", "references", "header", "body"]  # names when there is no header
+# delimiter = ","
+# escapechar = "\\"                 # for files that escape quotes as \"
+# doublequote = false
+# id = "ref"                        # column identifying the record (default: row number)
+# title = "ref"                     # column, or a template like "{ref}: {subject}"
+# date = "date"
+# date_format = "%m/%d/%Y %H:%M"
+# text = ["body"]                   # columns that form the searchable text (default: all)
+# origin = "origin"
+# classification = "classification"
+# author = ""
+# fields = ["ref", "origin", "classification", "references"]   # shown on the document page
+# entities = { origin = "place" }   # column -> entity type (values become entities)
+# kind = "record"                   # document kind label ("cable" enables the diplomatic parser)
+# limit = 0                         # read only N rows (trial runs)
+#
+# [[records]]
+# type = "sql"                      # one document per row of INSERT statements in a SQL dump
+# path = "dump.sql.7z"              # .sql, or inside .7z/.zip/.tar (read in memory)
+# table = "war_diary"
+# html_unescape = true              # for dumps with &amp;-escaped text
+# id = "ReportKey"                  # ... plus the same title/date/text/fields/entities options as csv
+#
+# [[records]]
+# type = "chat"                     # chat logs: Jabber/XMPP JSON (Conti), Telegram & Discord exports, Slack folders
+# path = "chats.7z"                 # a file, folder or archive of .json/.jsonl/.txt files
+# max_messages = 400                # messages per document (one document per conversation per day)
+#
+# [[records]]
+# type = "icij"                     # ICIJ Offshore Leaks database (offshoreleaks.icij.org → Download)
+# path = "offshore-leaks-db"        # folder with nodes-*.csv and relationships.csv
+# sources = ["Panama Papers"]       # keep only nodes from these leaks (empty = all)
+
+# Where the files come from, for build/fetch.py (downloads into `root`, resumable and rate-limited).
+# [fetch]
+# type = "links"                    # scrape listing pages for file links
+# pages = ["https://example.gov/release?page={page}"]   # {page} paginates from 0; {n} expands n_range
+# extensions = [".pdf"]
+# link_pattern = "/files/"          # keep only links matching this regex
+# strip_prefix = "/files/"          # URL path prefix removed to make the local path
+# interval = 1.0                    # seconds between requests to the same host
+# concurrency = 2
+# max_file_gb = 25
+#
+# Other types: "ia" (Internet Archive search: query, files, strip_identifier_prefix, shard_pattern),
+# "ia-item" (one Internet Archive item: item, files_regex, [fetch.sha256] table to verify),
+# "wayback" (Wayback Machine captures: url, mimetype), "wordpress" (every post of a WordPress site: api, link_pattern).
